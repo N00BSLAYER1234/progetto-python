@@ -44,6 +44,7 @@ class AssetManager:
         self.load_player_animations(sprites_dir)
         self.load_enemy_animations(sprites_dir)
         self.load_coin_animations(sprites_dir)
+        self.load_chest_animations(sprites_dir)
 
         # Load single sprite files
         sprite_files = {
@@ -143,6 +144,47 @@ class AssetManager:
                     print(f"Loaded {len(frames)} frames for diamond coin animation")
             except pygame.error as e:
                 print(f"Could not load diamond sprite sheet: {e}")
+
+    def load_chest_animations(self, sprites_dir):
+        """Load chest animation frames (idle and open)"""
+        chest_dir = os.path.join(sprites_dir, 'Chest')
+
+        if not os.path.exists(chest_dir):
+            return
+
+        # Load idle animation (closed chest)
+        idle_dir = os.path.join(chest_dir, 'Idle')
+        if os.path.exists(idle_dir):
+            frames = []
+            files = sorted([f for f in os.listdir(idle_dir) if f.endswith('.png')])
+            for filename in files:
+                filepath = os.path.join(idle_dir, filename)
+                try:
+                    frame = pygame.image.load(filepath).convert_alpha()
+                    frames.append(frame)
+                except pygame.error as e:
+                    print(f"Could not load {filename}: {e}")
+
+            if frames:
+                self.sprites['chest_idle'] = frames
+                print(f"Loaded {len(frames)} frames for chest idle animation")
+
+        # Load open/unlocked animation
+        open_dir = os.path.join(chest_dir, 'Unlocked')
+        if os.path.exists(open_dir):
+            frames = []
+            files = sorted([f for f in os.listdir(open_dir) if f.endswith('.png')])
+            for filename in files:
+                filepath = os.path.join(open_dir, filename)
+                try:
+                    frame = pygame.image.load(filepath).convert_alpha()
+                    frames.append(frame)
+                except pygame.error as e:
+                    print(f"Could not load {filename}: {e}")
+
+            if frames:
+                self.sprites['chest_open'] = frames
+                print(f"Loaded {len(frames)} frames for chest open animation")
 
     def load_backgrounds(self):
         """Load background images"""

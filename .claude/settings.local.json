@@ -9,7 +9,9 @@
       "Bash(py main.py:*)",
       "Bash(py -m pip install:*)",
       "Bash(del:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(python -c \"import pytmx; from pytmx.util_pygame import load_pygame; tmx = load_pygame(''assets/levels/level2.tmx''); print(''TMX loaded successfully!''); print(f''Size: {tmx.width}x{tmx.height} tiles''); print(f''Tile size: {tmx.tilewidth}x{tmx.tileheight}''); print(f''Layers: {[layer.name for layer in tmx.visible_layers]}'')\")",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

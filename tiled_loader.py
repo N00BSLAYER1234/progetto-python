@@ -4,7 +4,7 @@ Tiled map loader for loading TMX files
 import pygame
 import pytmx
 from pytmx.util_pygame import load_pygame
-from entities import Platform, Enemy, Coin, Boss
+from entities import Platform, Enemy, Coin, Boss, Chest
 from config import *
 
 
@@ -21,20 +21,39 @@ class TiledMapLoader:
         enemies = pygame.sprite.Group()
         coins = pygame.sprite.Group()
         boss = None
+        chest = None
         player_spawn = None
 
         # Load tile layers (platforms, background, etc)
-        for layer in self.tmx_data.visible_layers:
+        for layer_idx, layer in enumerate(self.tmx_data.visible_layers):
             if isinstance(layer, pytmx.TiledTileLayer):
                 # Check if this is a platform layer
                 if 'platform' in layer.name.lower() or 'collision' in layer.name.lower():
-                    platforms.extend(self.load_platforms_from_layer(layer))
+                    platforms.extend(self.load_platforms_from_layer(layer_idx))
 
         # Load object layers (enemies, coins, player spawn, boss)
         for layer in self.tmx_data.visible_layers:
             if isinstance(layer, pytmx.TiledObjectGroup):
                 for obj in layer:
-                    obj_type = obj.properties.get('type', '').lower()
+                    # Try multiple ways to get the object type
+                    obj_type = ''
+
+                    # Method 1: Check 'entity_type' property
+                    obj_type = obj.properties.get('entity_type', '').lower()
+
+                    # Method 2: Check 'value' property (from your TMX format)
+                    if not obj_type:
+                        obj_type = obj.properties.get('value', '').lower()
+
+                    # Method 3: Check Tiled's built-in 'type' field (for rectangles)
+                    if not obj_type and hasattr(obj, 'type') and obj.type:
+                        obj_type = str(obj.type).lower()
+
+                    # Method 4: Check if obj.type is 'rectangle' and look at layer name
+                    if obj_type == 'rectangle' and hasattr(layer, 'name'):
+                        layer_name = str(layer.name).lower()
+                        if 'enemy' in layer_name:
+                            obj_type = 'enemy'
 
                     if obj_type == 'player':
                         player_spawn = (obj.x, obj.y)
@@ -51,15 +70,19 @@ class TiledMapLoader:
                     elif obj_type == 'boss':
                         boss = Boss(obj.x, obj.y)
 
+                    elif obj_type == 'chest':
+                        chest = Chest(obj.x, obj.y)
+
         return {
             'platforms': platforms,
             'enemies': enemies,
             'coins': coins,
             'boss': boss,
+            'chest': chest,
             'player_spawn': player_spawn
         }
 
-    def load_platforms_from_layer(self, layer):
+    def load_platforms_from_layer(self, layer_idx):
         """Convert tile layer to platform objects"""
         platforms = []
 
@@ -69,7 +92,7 @@ class TiledMapLoader:
             platform_width = 0
 
             for x in range(self.tmx_data.width):
-                tile = self.tmx_data.get_tile_image(x, y, layer)
+                tile = self.tmx_data.get_tile_image(x, y, layer_idx)
 
                 if tile:  # There's a tile here
                     if platform_start is None:

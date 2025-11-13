@@ -3,7 +3,7 @@ Level layouts and configurations for the platform game
 """
 import pygame
 from config import *
-from entities import Platform, Enemy, Coin, Boss, Spike
+from entities import Platform, Enemy, Coin, Boss, Spike, Chest
 from tiled_loader import load_level_from_tiled
 
 
@@ -17,6 +17,7 @@ class Level:
         self.coins = pygame.sprite.Group()
         self.spikes = pygame.sprite.Group()  # Add spikes group
         self.boss = None
+        self.chest = None  # Add chest
         self.tiled_loader = None
         self.player_spawn = None
 
@@ -28,6 +29,7 @@ class Level:
             self.enemies = tiled_data['enemies']
             self.coins = tiled_data['coins']
             self.boss = tiled_data['boss']
+            self.chest = tiled_data.get('chest')
             self.player_spawn = tiled_data.get('player_spawn')
             self.tiled_loader = tiled_data.get('loader')
         else:
@@ -54,22 +56,15 @@ class Level:
         if self.boss:
             self.boss.update(player.rect.x)
 
+        # Update chest if exists
+        if self.chest:
+            self.chest.update()
+
     def draw(self, screen):
         """Draw all level entities"""
-        # DEBUG: Show red boxes to see platform positions with labels
-        font = pygame.font.Font(None, 16)
-        for i, platform in enumerate(self.platforms):
-            pygame.draw.rect(screen, (255, 0, 0), platform.rect, 2)  # Red outline
-            # Draw platform info (index, x, width)
-            if platform.rect.width > 10:  # Only label visible platforms
-                text = font.render(f"#{i} x:{platform.rect.x} w:{platform.rect.width}", True, (255, 255, 0))
-                screen.blit(text, (platform.rect.x + 2, platform.rect.y - 15))
-
-        # Draw enemies (cucumber with animations)
-        self.enemies.draw(screen)
-
-        # Draw coins (diamond with animations)
-        self.coins.draw(screen)
+        # DON'T draw platforms, enemies, or coins - they should be invisible
+        # Only background (drawn in game.py) and player (drawn in game.py) are visible
+        pass
 
         # Spikes are invisible hazards (no drawing needed)
 

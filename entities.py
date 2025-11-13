@@ -289,7 +289,88 @@ class BossProjectile(pygame.sprite.Sprite):
     def update(self):
         """Move projectile downward"""
         self.rect.y += self.speed
-        
+
         # Remove if off screen
         if self.rect.top > SCREEN_HEIGHT:
             self.kill()
+
+
+class Chest(pygame.sprite.Sprite):
+    """Chest that opens when all coins are collected"""
+    def __init__(self, x, y):
+        super().__init__()
+        # Load chest animations
+        assets = get_assets()
+        self.idle_frames = []
+        self.open_frames = []
+        self.has_animations = False
+        self.animation_frame = 0
+        self.animation_counter = 0
+        self.animation_speed = 0.15
+        self.is_open = False
+        self.is_opening = False
+        self.can_advance = False  # True when animation completes
+
+        if assets:
+            # Load idle animation (closed chest)
+            idle = assets.get_sprite('chest_idle')
+            if idle and isinstance(idle, list):
+                self.idle_frames = idle
+                self.has_animations = True
+
+            # Load open/unlocked animation
+            open_anim = assets.get_sprite('chest_open')
+            if open_anim and isinstance(open_anim, list):
+                self.open_frames = open_anim
+                self.has_animations = True
+
+        # Set initial image
+        if self.has_animations and self.idle_frames:
+            self.image = self.idle_frames[0]
+        else:
+            # Fallback: simple colored box
+            self.image = pygame.Surface((32, 32))
+            self.image.fill((139, 69, 19))  # Brown
+
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def open(self):
+        """Start the opening animation"""
+        if not self.is_open and not self.is_opening:
+            self.is_opening = True
+            self.animation_frame = 0
+
+    def update(self):
+        """Update chest animation"""
+        if not self.has_animations:
+            return
+
+        if self.is_opening:
+            # Play opening animation
+            self.animation_counter += self.animation_speed
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.animation_frame += 1
+
+                if self.animation_frame >= len(self.open_frames):
+                    # Animation complete
+                    self.animation_frame = len(self.open_frames) - 1
+                    self.is_opening = False
+                    self.is_open = True
+                    self.can_advance = True  # Signal that player can advance to next level
+
+                if self.animation_frame < len(self.open_frames):
+                    self.image = self.open_frames[self.animation_frame]
+
+        elif self.is_open:
+            # Stay on last frame of open animation
+            if self.open_frames:
+                self.image = self.open_frames[-1]
+
+        else:
+            # Idle animation (closed chest)
+            if self.idle_frames:
+                # Could add a breathing/idle animation here if you want
+                self.image = self.idle_frames[0]

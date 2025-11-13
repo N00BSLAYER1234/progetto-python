@@ -160,9 +160,19 @@ class Game:
                 else:
                     self.player.reset_position(100, SCREEN_HEIGHT - 150)
         
-        # Check level completion (all coins collected and no enemies)
-        if not self.level.boss and len(self.level.coins) == 0:
-            self.next_level()
+        # Check chest interaction
+        if self.level.chest:
+            # Open chest when all coins are collected
+            if len(self.level.coins) == 0 and not self.level.chest.is_open and not self.level.chest.is_opening:
+                self.level.chest.open()
+
+            # Check if player collides with open chest to advance level
+            if self.level.chest.can_advance and self.player.rect.colliderect(self.level.chest.rect):
+                self.next_level()
+        else:
+            # Fallback: Check level completion (all coins collected and no enemies) - for levels without chest
+            if not self.level.boss and len(self.level.coins) == 0:
+                self.next_level()
     
     def next_level(self):
         """Load the next level"""
@@ -195,7 +205,11 @@ class Game:
 
         # Draw level
         self.level.draw(self.screen)
-        
+
+        # Draw chest if exists
+        if self.level.chest:
+            self.screen.blit(self.level.chest.image, self.level.chest.rect)
+
         # Draw player
         self.player.draw(self.screen)
         
